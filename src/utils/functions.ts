@@ -25,28 +25,5 @@ export const handleTokenError = (error: Error, res: Response) => {
       return res.status(500).json({
         err: "Internal server error",
       });
-    }
-  };
-
-
-  export const encryptPassword = (password: string): string => {
-    console.log("process.env.PASSWORD_KEY",process.env.PASSWORD_KEY);
-    
-    const algorithm = 'aes-128-cbc'; 
-    const iv = crypto.randomBytes(16);
-  
-    const cipher = crypto.createCipheriv(algorithm, Buffer.from(process.env.PASSWORD_KEY, 'hex'), iv);
-    let encryptedPassword = cipher.update(password, 'utf-8', 'hex');
-    encryptedPassword += cipher.final('hex');
-    return iv.toString('hex') + encryptedPassword;
-  };
-  
-  export const decryptPassword = (encryptedPassword: string): string => {
-    const algorithm = 'aes-128-cbc'; 
-    const iv = Buffer.from(encryptedPassword.slice(0, 32), 'hex');
-  
-    const decipher = crypto.createDecipheriv(algorithm, Buffer.from(process.env.PASSWORD_KEY, 'hex'), iv);
-    let decryptedPassword = decipher.update(encryptedPassword.slice(32), 'hex', 'utf-8');
-    decryptedPassword += decipher.final('utf-8');
-    return decryptedPassword;
-  };
+  }
+};
