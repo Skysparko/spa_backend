@@ -1,3 +1,13 @@
+export enum BypassLoginEnum {
+  Yes = 'Yes',
+  No = 'No',
+}
+
+export enum StatusEnum {
+  Active = 'Active',
+  Inactive = 'Inactive',
+}
+
 export interface UserAttributes {
   uid?: number;
   name: string;
@@ -5,10 +15,13 @@ export interface UserAttributes {
   mobile_no: string;
   password: string;
   email: string;
-  city:string;
-  reg_date:Date;
-  status:string;
+  city: string;
+  reg_date: Date;
+  status: StatusEnum;
+  otp?: string;
+  bypass_login:BypassLoginEnum;
 }
+
 // uid, name, image,mobile_no, password, email, city, reg_date,status
 // interface ServerAttributes {
 //   id?: number;

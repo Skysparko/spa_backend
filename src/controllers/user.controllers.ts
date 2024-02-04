@@ -6,49 +6,56 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { UserRequest } from "../middlewares/auth.middleware";
 import { Op } from "sequelize";
-import { UserAttributes } from "../@types/user.types";
+import { BypassLoginEnum, StatusEnum, UserAttributes } from "../@types/types";
 
 export async function addUser(req: Request, res: Response) {
   try {
+    console.log("here");
+    
     // Validation
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
+    // const errors = validationResult(req);
+    // if (!errors.isEmpty()) {
+    //   return res.status(422).json({ errors: errors.array() });
+    // }
 
-    const { username } = req.body;
+    const  data = req.body;
+
     const userExists = await User.findOne({
-      where: { name:username },
+      where: { name: data.name },
     });
 
     if (userExists) {
       return res.status(403).send("Username already exists");
     }
 
-      try {
-        const userData: UserAttributes = {
-          name: username as string,
-          password: "",
-          image: "",
-          mobile_no: "",
-          email: "",
-          city: "",
-          reg_date: new Date(),
-          status: ""
-        };
-    
-        const user = await User.create(userData);
+    try {
+      const userData: UserAttributes = {
+        name: data.name,
+        password: data.password,
+        image: data.image,
+        mobile_no: data.mobile_no,
+        email: data.email,
+        city: data.city,
+        reg_date: new Date(),
+        status: StatusEnum.Active,
+        bypass_login: BypassLoginEnum.Yes,
+      };
 
-        return res.status(201).json({ 
-          message: `User has been created`, 
-          user:{...user}
-        });
+      const user = await User.create(userData);
 
-      } catch (error) {
-        throw error; // rethrow the error after rolling back the transaction
-      }
+      return res.status(201).json({
+        message: `User has been created`,
+        user: { ...user.dataValues }
+      });
+
+    } catch (error) {
+      console.log(error);
+      
+      throw error; // rethrow the error after rolling back the transaction
+    }
     // });
   } catch (error) {
+    console.log(error);
     return res.status(500).send(error);
   }
 }
@@ -75,7 +82,7 @@ export async function addUser(req: Request, res: Response) {
 //     const bearerToken = jwt.sign(payload, process.env.JWT_SECRET as string, {
 //       expiresIn: 360000,
 //     });
-    
+
 //     const serversData = await getUserById(existingUser.id,res)
 
 //     res.cookie("bearerToken", bearerToken, {

@@ -1,4 +1,4 @@
-import { UserAttributes } from "../@types/user.types";
+import { BypassLoginEnum, StatusEnum, UserAttributes } from "../@types/types";
 import { createDB } from "../config/db";
 import DataTypes, { Model, Optional } from "sequelize";
 
@@ -36,14 +36,22 @@ const User = createDB.define<UserModel>("users", {
   },
   city: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   reg_date: {
     type: DataTypes.DATE,
     allowNull: false,
   },
   status: {
+    type: DataTypes.ENUM(...Object.values(StatusEnum)),
+    allowNull: false,
+  },
+  otp: {
     type: DataTypes.STRING,
+    allowNull: true,
+  },
+  bypass_login: {
+    type: DataTypes.ENUM(...Object.values(BypassLoginEnum)),
     allowNull: false,
   },
 },{

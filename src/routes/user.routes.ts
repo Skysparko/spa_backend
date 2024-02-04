@@ -21,7 +21,7 @@ const router: Router = express.Router();
 
 router.get("/api");
 
-router.post("/add", userAddValidations , addUser);
+router.post("/add", addUser);
 
 // router.post("/login", userLoginValidations , userLogin);
 
