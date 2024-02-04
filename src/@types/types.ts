@@ -19,9 +19,28 @@ export interface UserAttributes {
   reg_date: Date;
   status: StatusEnum;
   otp?: string;
-  bypass_login:BypassLoginEnum;
+  bypass_login: BypassLoginEnum;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  msg: string;
+  data: {
+    list: T[];
+    path: string;
+    detail: T;
+  };
+}
+
+export const defaultApiResponse = {
+  success: false,
+  msg: "",
+  data: {
+    list: [],
+    path: '',
+    detail: null,
+  },
+} as const;
 // uid, name, image,mobile_no, password, email, city, reg_date,status
 // interface ServerAttributes {
 //   id?: number;

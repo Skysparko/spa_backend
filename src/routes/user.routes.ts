@@ -1,39 +1,34 @@
 import express, { Router } from "express";
 import {
   idValidations,
-  userAddValidations,
-  userEditValidations,
+  registerUserValidation,
   userLoginValidations,
   userPasswordUpdateValidations,
 } from "../utils/validators.functions";
 import {
-  // deleteUser,
-  // editUser,
-  // getUser,
+  getUser,
   getUsers,
-  addUser,
-  // userLogin,
-  // resetPassword
+  registerUser,
+  userLogin,
+  updatePassword
 } from "../controllers/user.controllers";
-// import { isAdmin, isApiKeyAvailable } from "../middlewares/auth.middleware";
 
 const router: Router = express.Router();
 
 router.get("/api");
 
-router.post("/add", addUser);
+router.post("/register", registerUserValidation, registerUser);
 
-// router.post("/login", userLoginValidations , userLogin);
+router.post("/login", userLoginValidations , userLogin);
 
 // router.put("/edit/:id", idValidations,  userEditValidations, editUser);
 
 // router.delete("/:id",idValidations,  deleteUser);
 
-// router.get("/:id",idValidations,  getUser);
+router.get("/:id",idValidations,  getUser);
 
 router.get("/", getUsers);
 
-// router.post("/reset-password/:id",  idValidations, userPasswordUpdateValidations, resetPassword );
-
+router.patch("/update-password/:id",  idValidations, userPasswordUpdateValidations, updatePassword );
 
 export default router;
