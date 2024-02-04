@@ -21,7 +21,7 @@ router.post("/register", registerUserValidation, registerUser);
 
 router.post("/login", userLoginValidations , userLogin);
 
-// router.put("/edit/:id", idValidations,  userEditValidations, editUser);
+// router.put("/edit/:id", idValidations, userEditValidations, editUser);
 
 // router.delete("/:id",idValidations,  deleteUser);
 

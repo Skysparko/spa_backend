@@ -2,54 +2,55 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import User from "../models/user.model";
 import { getTimeInDays } from "../utils/functions";
+import { upload } from "../utils/fileUploads";
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { UserRequest } from "../middlewares/auth.middleware";
-import { Op } from "sequelize";
 import { ApiResponse, BypassLoginEnum, StatusEnum, UserAttributes, defaultApiResponse } from "../@types/types";
 
 export async function registerUser(req: Request, res: Response) {
-  try {
-    // Validation
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
+  upload(req, res, async (err) => {
+    try {
+      // Validation
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+      }
+      const data = req.body;
+
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      const imageFileName = req.file ? req.file.filename : "ash";
+
+      const userData: UserAttributes = {
+        name: data.name,
+        password: hashedPassword,
+        image: imageFileName,
+        mobile_no: data.mobile_no,
+        email: data.email,
+        city: data.city,
+        reg_date: new Date(),
+        status: StatusEnum.Active,
+        bypass_login: BypassLoginEnum.Yes,
+      };
+
+      const user = await User.create(userData);
+
+      const apiResponse: ApiResponse<UserAttributes> = {
+        ...defaultApiResponse,
+        success: true,
+        msg: 'User has been created',
+        data: {
+          list: [],
+          path: "",
+          detail: { ...user.dataValues },
+        },
+      };
+
+      return res.status(201).json(apiResponse);
+    } catch (error) {
+      console.log(">>>>", error);
+      return res.status(500).send(error);
     }
-
-    const data = req.body;
-
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-
-    const userData: UserAttributes = {
-      name: data.name,
-      password: hashedPassword,
-      image: data.image,
-      mobile_no: data.mobile_no,
-      email: data.email,
-      city: data.city,
-      reg_date: new Date(),
-      status: StatusEnum.Active,
-      bypass_login: BypassLoginEnum.Yes,
-    };
-
-    const user = await User.create(userData);
-
-    const apiResponse: ApiResponse<UserAttributes> = {
-      ...defaultApiResponse,
-      success: true,
-      msg: 'User has been created',
-      data: {
-        list: [],
-        path: "",
-        detail: { ...user.dataValues },
-      },
-    };
-
-    return res.status(201).json(apiResponse);
-  } catch (error) {
-    console.log(">>>>", error);
-    return res.status(500).send(error);
-  }
+  });
 }
 
 export async function userLogin(req: Request, res: Response) {
@@ -200,7 +201,7 @@ export async function logout(req: Request, res: Response) {
 //   }
 // }
 
-// export async function deleteUsers(req: Request, res: Response) {
+// export async functiopn deleteUsers(req: Request, res: Response) {
 //   try {
 //     await User.destroy({
 //       where: {},

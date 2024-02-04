@@ -28,7 +28,7 @@ export interface ApiResponse<T> {
   data: {
     list: T[];
     path: string;
-    detail: T;
+    detail: T|null;
   };
 }
 
