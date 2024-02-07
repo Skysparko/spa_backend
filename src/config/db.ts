@@ -12,7 +12,7 @@ const createDB = new Sequelize(
 
 const connectDB = (): void => {
   createDB
-    .sync()
+    .sync({alter:true})
     .then(() => {
       console.log("Db is connected");
     })
