@@ -6,27 +6,27 @@ import { upload } from "../utils/fileUploads";
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { ApiResponse, BypassLoginEnum, StatusEnum, UserAttributes, defaultApiResponse } from "../@types/types";
+import { Op } from "sequelize";
 
 export async function registerUser(req: Request, res: Response) {
   upload(req, res, async (err) => {
     try {
       // Validation
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-      }
+      // const errors = validationResult(req);
+      // if (!errors.isEmpty()) {
+      //   return res.status(422).json({ errors: errors.array() });
+      // }
       const data = req.body;
-
       const hashedPassword = await bcrypt.hash(data.password, 10);
       const imageFileName = req.file ? req.file.filename : "ash";
 
       const userData: UserAttributes = {
         name: data.name,
         password: hashedPassword,
-        image: imageFileName,
         mobile_no: data.mobile_no,
         email: data.email,
         city: data.city,
+        image: imageFileName,
         reg_date: new Date(),
         status: StatusEnum.Active,
         bypass_login: BypassLoginEnum.Yes,
@@ -108,75 +108,51 @@ export async function logout(req: Request, res: Response) {
   }
 };
 
-// export async function editUser(req: UserRequest, res: Response) {
-//   const transaction = await User.sequelize.transaction();
+export async function editUser(req: Request, res: Response) {
 
-//   try {
-//     // Validation
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       await transaction.rollback();
-//       return res.status(422).json({ errors: errors.array() });
-//     }
-//     const { username, userTransArr } = req.body;
-//     const userId: number = Number(req.params.id);
+  try {
+    // Validation
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+    // const { username, userTransArr } = req.body;
+    
+    const userId: number = Number(req.params.id);
+    
+    const userExists = await User.findOne({
+      where: {
+        mobile_no: {
+          [Op.not]: req.body.mobile_no,
+        }
+      },
+    });
 
-//     const userExists = await User.findOne({
-//       where: {
-//         username,
-//         id: {
-//           [Op.not]: userId,
-//         }
-//       },
-//     });
+    if (userExists) {
+      return res.status(403).send("Mobile no already exists");
+    }
+    
+    const reqData = req.body;
+    const user = await User.findOne({ where: { uid: userId } });
 
-//     if (userExists) {
-//       return res.status(403).send("Username already exists");
-//     }
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
 
-//     const user = await User.findOne({ where: { id: userId } });
-
-//     if (!user) {
-//       await transaction.rollback();
-//       return res.status(404).send("User not found");
-//     }
-//     const updatedBy = req.user.dataValues.id;
-//     const data = {
-//       username,
-//       updatedBy: updatedBy
-//     };
-
-//     await user.update(data, { transaction });
-
-//     await UserTrans.destroy({ where: { userId: userId }, transaction });
-//     const userTrans = [];
-//     for (let i = 0; i < userTransArr.length; i++) {
-//       const userTransData: UserTransAttributes = {
-//         id: userTransArr[i]?.id || null,
-//         userId: userId,
-//         serverId: userTransArr[i]?.serverId,
-//         siteId: userTransArr[i]?.siteId,
-//       };
-//       let { id, serverId, siteId } = await UserTrans.create(userTransData, { transaction });
-//       userTrans.push({ id, serverId, siteId });
-//     }
-//     await transaction.commit();
-
-//     const finalData = {
-//       id: userId,
-//       username: user.dataValues.username,
-//       createdBy: user.createdBy,
-//       updatedBy: updatedBy,
-//       userTransData: userTrans
-//     }
-
-//     return res.status(200).json({ message: "User updated successfully.", user: { ...finalData } });
-//   } catch (error) {
-//     console.log(">>>>", error);
-//     await transaction.rollback();
-//     return res.status(500).send(error);
-//   }
-// }
+    const data = {
+      "name": reqData.name,
+      "mobile_no": reqData.mobile_no,
+      "email": reqData.email,
+      "city": reqData.city,
+      "image": reqData.image,
+    }
+    const userData = await user.update(data);
+    return res.status(200).json({userData});
+  } catch (error) {
+    console.log(">>>>", error);
+    return res.status(500).send(error);
+  }
+}
 
 // export async function deleteUser(req: Request, res: Response) {
 //   try {

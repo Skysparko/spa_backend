@@ -10,6 +10,7 @@ import {
   getUsers,
   registerUser,
   userLogin,
+  editUser,
   updatePassword
 } from "../controllers/user.controllers";
 
@@ -21,7 +22,7 @@ router.post("/register", registerUserValidation, registerUser);
 
 router.post("/login", userLoginValidations , userLogin);
 
-// router.put("/edit/:id", idValidations, userEditValidations, editUser);
+router.put("/edit/:id", idValidations, registerUserValidation, editUser);
 
 // router.delete("/:id",idValidations,  deleteUser);
 
