@@ -11,21 +11,28 @@ import { Op } from "sequelize";
 export async function registerUser(req: Request, res: Response) {
   upload(req, res, async (err) => {
     try {
-      // Validation
-      // const errors = validationResult(req);
-      // if (!errors.isEmpty()) {
-      //   return res.status(422).json({ errors: errors.array() });
-      // }
-      const data = req.body;
-      const hashedPassword = await bcrypt.hash(data.password, 10);
+
+      const reqData = req.body;
+      const userExists = await User.findOne({
+        where: {
+          mobile_no: reqData.mobile_no,
+        },
+      });
+
+
+      if (userExists) {
+        return res.status(403).send("Account already exist with number.");
+      }
+
+      const hashedPassword = await bcrypt.hash(reqData.password, 10);
       const imageFileName = req.file ? req.file.filename : "ash";
 
       const userData: UserAttributes = {
-        name: data.name,
+        name: reqData.name,
         password: hashedPassword,
-        mobile_no: data.mobile_no,
-        email: data.email,
-        city: data.city,
+        mobile_no: reqData.mobile_no,
+        email: reqData.email,
+        city: reqData.city,
         image: imageFileName,
         reg_date: new Date(),
         status: StatusEnum.Active,
@@ -109,29 +116,21 @@ export async function logout(req: Request, res: Response) {
 };
 
 export async function editUser(req: Request, res: Response) {
-
   try {
-    // Validation
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-    // const { username, userTransArr } = req.body;
-    
     const userId: number = Number(req.params.id);
-    
     const userExists = await User.findOne({
       where: {
-        mobile_no: {
-          [Op.not]: req.body.mobile_no,
+        mobile_no: req.body.mobile_no,
+        uid: {
+          [Op.not]: userId,
         }
       },
     });
 
     if (userExists) {
-      return res.status(403).send("Mobile no already exists");
+      return res.status(403).send("Account already exist with number.");
     }
-    
+
     const reqData = req.body;
     const user = await User.findOne({ where: { uid: userId } });
 
@@ -147,7 +146,19 @@ export async function editUser(req: Request, res: Response) {
       "image": reqData.image,
     }
     const userData = await user.update(data);
-    return res.status(200).json({userData});
+
+    const apiResponse: ApiResponse<UserAttributes> = {
+      ...defaultApiResponse,
+      success: true,
+      msg: 'User has been updated successfully.',
+      data: {
+        list: [],
+        path: "",
+        detail: { ...userData.dataValues },
+      },
+    };
+
+    return res.status(200).json(apiResponse);
   } catch (error) {
     console.log(">>>>", error);
     return res.status(500).send(error);
@@ -275,6 +286,7 @@ export async function updatePassword(req: Request, res: Response) {
         detail: null,
       },
     };
+
     return res.status(200).json(apiResponse);
   } catch (error) {
     console.log(">>>>", error);

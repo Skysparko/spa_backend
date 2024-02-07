@@ -22,6 +22,28 @@ export interface UserAttributes {
   bypass_login: BypassLoginEnum;
 }
 
+export enum TournamentTypeEnum {
+  Single = 'Single',
+  Double = 'Double',
+  Team = 'Team',
+}
+
+export type SportType = "Cricket" | "Badminton" | "Volleyball";
+
+export interface TournamentAttributes {
+  tnid?: number;
+  uid: number;
+  sport: SportType; 
+  title: string;
+  logo: string;
+  season: string;
+  from_date: Date;
+  to_date: Date;
+  end_date: Date;
+  type: TournamentTypeEnum;
+  win_point: number;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   msg: string;
