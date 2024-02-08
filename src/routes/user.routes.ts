@@ -10,9 +10,11 @@ import {
   getUsers,
   registerUser,
   userLogin,
-  editUser,
-  updatePassword
+  updateUser,
+  updatePassword,
+  otpVerify
 } from "../controllers/user.controllers";
+import { isAuthorized } from "../middlewares/auth.middleware";
 
 const router: Router = express.Router();
 
@@ -20,16 +22,18 @@ router.get("/api");
 
 router.post("/register", registerUserValidation, registerUser);
 
-router.post("/login", userLoginValidations , userLogin);
+router.post("/login", userLoginValidations, userLogin);
 
-router.put("/edit/:id", idValidations, registerUserValidation, editUser);
+router.post("/otp_verify", otpVerify);
 
-// router.delete("/:id",idValidations,  deleteUser);
+router.put("/update/:id", idValidations, registerUserValidation, isAuthorized, updateUser);
 
-router.get("/:id",idValidations,  getUser);
+router.patch("/update-password/:id", idValidations, userPasswordUpdateValidations, isAuthorized, updatePassword);
+
+router.get("/:id", idValidations, getUser);
 
 router.get("/", getUsers);
 
-router.patch("/update-password/:id",  idValidations, userPasswordUpdateValidations, updatePassword );
+// router.delete("/:id",idValidations,  deleteUser);
 
 export default router;

@@ -49,6 +49,7 @@ const User = createDB.define<UserModel>("users", {
   otp: {
     type: DataTypes.STRING,
     allowNull: true,
+    defaultValue:1234
   },
   bypass_login: {
     type: DataTypes.ENUM(...Object.values(BypassLoginEnum)),

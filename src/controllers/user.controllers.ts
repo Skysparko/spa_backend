@@ -11,14 +11,12 @@ import { Op } from "sequelize";
 export async function registerUser(req: Request, res: Response) {
   upload(req, res, async (err) => {
     try {
-
       const reqData = req.body;
       const userExists = await User.findOne({
         where: {
           mobile_no: reqData.mobile_no,
         },
       });
-
 
       if (userExists) {
         return res.status(403).send("Account already exist with number.");
@@ -36,7 +34,7 @@ export async function registerUser(req: Request, res: Response) {
         image: imageFileName,
         reg_date: new Date(),
         status: StatusEnum.Active,
-        bypass_login: BypassLoginEnum.Yes,
+        bypass_login: BypassLoginEnum.No,
       };
 
       const user = await User.create(userData);
@@ -48,9 +46,18 @@ export async function registerUser(req: Request, res: Response) {
         data: {
           list: [],
           path: "",
-          detail: { ...user.dataValues },
+          detail: null,
         },
       };
+
+      if (user.bypass_login === "Yes") {
+        const payload = { user: { id: user.uid } };
+        const bearerToken = jwt.sign(payload, process.env.JWT_SECRET as string, {
+          expiresIn: 360000,
+        });
+        apiResponse.data.detail = user.dataValues;
+        apiResponse.data.bearerToken = bearerToken;
+      }
 
       return res.status(201).json(apiResponse);
     } catch (error) {
@@ -66,6 +73,7 @@ export async function userLogin(req: Request, res: Response) {
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
+
     const { mobile_no, password } = await req.body;
     const existingUser = await User.findOne({
       where: { mobile_no },
@@ -73,18 +81,64 @@ export async function userLogin(req: Request, res: Response) {
     if (!existingUser) {
       return res.status(404).send("User not Found");
     }
+
     const passMatch = await bcrypt.compare(password, existingUser.password);
     if (!passMatch) {
       return res.status(400).send("Invalid credentials.");
     }
 
+    const apiResponse: ApiResponse<UserAttributes> = {
+      ...defaultApiResponse,
+      success: true,
+      msg: 'Logged in successfully.',
+      data: {
+        list: [],
+        path: "",
+        detail: null,
+      },
+    };
+
+    if (existingUser.bypass_login === "Yes") {
+      const payload = { user: { id: existingUser.uid } };
+      const bearerToken = jwt.sign(payload, process.env.JWT_SECRET as string, {
+        expiresIn: 360000,
+      });
+      apiResponse.data.detail = existingUser.dataValues;
+      apiResponse.data.bearerToken = bearerToken;
+    }
+
+    return res.status(200).json(apiResponse);
+  } catch (error) {
+    console.log(">>>>", error);
+    return res.status(500).send(error);
+  }
+}
+
+export async function otpVerify(req: Request, res: Response) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const { mobile_no, otp } = await req.body;
+
+    const existingUser = await User.findOne({
+      where: { mobile_no },
+      attributes: { exclude: ['otp', 'password', 'bypass_login'] }
+    });
+
+    if (!existingUser) {
+      return res.status(404).send("User not Found");
+    }
+
+    if (otp === existingUser.otp) {
+      return res.status(400).send("Invalid otp.");
+    }
+
     const payload = { user: { id: existingUser.uid } };
     const bearerToken = jwt.sign(payload, process.env.JWT_SECRET as string, {
       expiresIn: 360000,
-    });
-
-    res.cookie("bearerToken", bearerToken, {
-      expires: getTimeInDays(1)
     });
 
     const apiResponse: ApiResponse<UserAttributes> = {
@@ -95,10 +149,11 @@ export async function userLogin(req: Request, res: Response) {
         list: [],
         path: "",
         detail: { ...existingUser.dataValues },
+        bearerToken
       },
     };
 
-    return res.status(200).json({ bearerToken, apiResponse });
+    return res.status(200).json(apiResponse);
   } catch (error) {
     console.log(">>>>", error);
     return res.status(500).send(error);
@@ -115,46 +170,96 @@ export async function logout(req: Request, res: Response) {
   }
 };
 
-export async function editUser(req: Request, res: Response) {
-  try {
-    const userId: number = Number(req.params.id);
-    const userExists = await User.findOne({
-      where: {
-        mobile_no: req.body.mobile_no,
-        uid: {
-          [Op.not]: userId,
-        }
-      },
-    });
+export async function updateUser(req: Request, res: Response) {
+  upload(req, res, async (err) => {
+    try {
+      const reqData = req.body;
+      const userId: number = Number(req.params.id);
+      console.log("req", req.body);
 
-    if (userExists) {
-      return res.status(403).send("Account already exist with number.");
+      const userExists = await User.findOne({
+        where: {
+          mobile_no: reqData.mobile_no,
+          uid: {
+            [Op.not]: userId,
+          }
+        },
+      });
+
+      if (userExists) {
+        return res.status(403).send("Account already exist with number.");
+      }
+
+      const user = await User.findOne({ where: { uid: userId } });
+
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+
+      const data = {
+        "name": reqData.name,
+        "mobile_no": reqData.mobile_no,
+        "email": reqData.email,
+        "city": reqData.city,
+        "image": reqData.image,
+      }
+      const userData = await user.update(data);
+
+      const apiResponse: ApiResponse<UserAttributes> = {
+        ...defaultApiResponse,
+        success: true,
+        msg: 'User has been updated successfully.',
+        data: {
+          list: [],
+          path: "",
+          detail: { ...userData.dataValues },
+        },
+      };
+
+      return res.status(200).json(apiResponse);
+    } catch (error) {
+      console.log(">>>>", error);
+      return res.status(500).json(error);
+    }
+  })
+}
+
+export async function updatePassword(req: Request, res: Response) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
     }
 
-    const reqData = req.body;
-    const user = await User.findOne({ where: { uid: userId } });
+    const id = req.params?.id;
+    const { old_password, new_password } = req.body;
+    const user = await User.findOne({ where: { uid: id } });
 
     if (!user) {
       return res.status(404).send("User not found");
     }
 
-    const data = {
-      "name": reqData.name,
-      "mobile_no": reqData.mobile_no,
-      "email": reqData.email,
-      "city": reqData.city,
-      "image": reqData.image,
-    }
-    const userData = await user.update(data);
 
-    const apiResponse: ApiResponse<UserAttributes> = {
+    const passMatch = await bcrypt.compare(old_password, user.password);
+    if (!passMatch) {
+      return res.status(400).send("Invalid credentials.");
+    }
+
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    const data = {
+      password: hashedPassword,
+    };
+    await user.update(data);
+
+    const apiResponse: ApiResponse<null> = {
       ...defaultApiResponse,
       success: true,
-      msg: 'User has been updated successfully.',
+      msg: 'Password changed successfully.',
       data: {
         list: [],
         path: "",
-        detail: { ...userData.dataValues },
+        detail: null,
       },
     };
 
@@ -244,44 +349,6 @@ export async function getUsers(req: Request, res: Response) {
       msg: 'User has been created',
       data: {
         list: usersData,
-        path: "",
-        detail: null,
-      },
-    };
-
-    return res.status(200).json(apiResponse);
-  } catch (error) {
-    console.log(">>>>", error);
-    return res.status(500).send(error);
-  }
-}
-
-export async function updatePassword(req: Request, res: Response) {
-  try {
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-    const id = req.params?.id;
-    const { password } = req.body;
-    const user = await User.findOne({ where: { uid: id } });
-
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const data = {
-      password: hashedPassword,
-    };
-    await user.update(data);
-
-    const apiResponse: ApiResponse<null> = {
-      ...defaultApiResponse,
-      success: true,
-      msg: 'Logged in successfully.',
-      data: {
-        list: [],
         path: "",
         detail: null,
       },

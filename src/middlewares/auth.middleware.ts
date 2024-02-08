@@ -16,7 +16,7 @@ export interface UserRequest extends Request {
 }
 
 export const isAuthorized = async (
-  req: UserRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -47,8 +47,6 @@ export const isAuthorized = async (
         err: "user not found",
       });
     }
-    
-    req.user = user;
     next();
   } catch (error:any) {
     handleTokenError(error, res)

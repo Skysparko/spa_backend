@@ -33,7 +33,7 @@ export type SportType = "Cricket" | "Badminton" | "Volleyball";
 export interface TournamentAttributes {
   tnid?: number;
   uid: number;
-  sport: SportType; 
+  sport: SportType;
   title: string;
   logo: string;
   season: string;
@@ -50,7 +50,8 @@ export interface ApiResponse<T> {
   data: {
     list: T[];
     path: string;
-    detail: T|null;
+    detail: T | null;
+    bearerToken?: string;
   };
 }
 
