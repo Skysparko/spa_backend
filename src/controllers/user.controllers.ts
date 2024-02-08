@@ -195,12 +195,13 @@ export async function updateUser(req: Request, res: Response) {
         return res.status(404).send("User not found");
       }
 
+      const imageFileName = req.file ? req.file.filename : "ash";
       const data = {
         "name": reqData.name,
         "mobile_no": reqData.mobile_no,
         "email": reqData.email,
         "city": reqData.city,
-        "image": reqData.image,
+        "image": imageFileName,
       }
       const userData = await user.update(data);
 
