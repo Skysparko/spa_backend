@@ -19,7 +19,7 @@ export interface UserAttributes {
   reg_date: Date;
   status: StatusEnum;
   otp?: string;
-  bypass_login: BypassLoginEnum;
+  bypass_login?: BypassLoginEnum;
 }
 
 export enum TournamentTypeEnum {

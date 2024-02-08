@@ -34,7 +34,6 @@ export async function registerUser(req: Request, res: Response) {
         image: imageFileName,
         reg_date: new Date(),
         status: StatusEnum.Active,
-        bypass_login: BypassLoginEnum.No,
       };
 
       const user = await User.create(userData);

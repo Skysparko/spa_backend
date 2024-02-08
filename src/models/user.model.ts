@@ -54,6 +54,7 @@ const User = createDB.define<UserModel>("users", {
   bypass_login: {
     type: DataTypes.ENUM(...Object.values(BypassLoginEnum)),
     allowNull: false,
+    defaultValue:"No"
   },
 },{
   timestamps: false,
