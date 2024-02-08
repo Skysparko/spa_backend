@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { ApiResponse, BypassLoginEnum, StatusEnum, UserAttributes, defaultApiResponse } from "../@types/types";
 import { Op } from "sequelize";
+import { UPLOAD_PATH_FOR_USERS } from "../utils/commonConstants";
 
 export async function registerUser(req: Request, res: Response) {
   upload(req, res, async (err) => {
@@ -44,7 +45,7 @@ export async function registerUser(req: Request, res: Response) {
         msg: 'User has been created',
         data: {
           list: [],
-          path: "",
+          path: UPLOAD_PATH_FOR_USERS,
           detail: null,
         },
       };
@@ -92,7 +93,7 @@ export async function userLogin(req: Request, res: Response) {
       msg: 'Logged in successfully.',
       data: {
         list: [],
-        path: "",
+        path: UPLOAD_PATH_FOR_USERS,
         detail: null,
       },
     };
@@ -146,7 +147,7 @@ export async function otpVerify(req: Request, res: Response) {
       msg: 'Logged in successfully.',
       data: {
         list: [],
-        path: "",
+        path: UPLOAD_PATH_FOR_USERS,
         detail: { ...existingUser.dataValues },
         bearerToken
       },
@@ -172,27 +173,19 @@ export async function otpVerify(req: Request, res: Response) {
 export async function updateUser(req: Request, res: Response) {
   upload(req, res, async (err) => {
     try {
+      const existingUser = Object(req)["user"];
       const reqData = req.body;
-      const userId: number = Number(req.params.id);
-      console.log("req", req.body);
 
-      const userExists = await User.findOne({
+      const user = await User.findOne({
         where: {
           mobile_no: reqData.mobile_no,
           uid: {
-            [Op.not]: userId,
+            [Op.not]: existingUser.uid,
           }
         },
       });
-
-      if (userExists) {
+      if (user) {
         return res.status(403).send("Account already exist with number.");
-      }
-
-      const user = await User.findOne({ where: { uid: userId } });
-
-      if (!user) {
-        return res.status(404).send("User not found");
       }
 
       const imageFileName = req.file ? req.file.filename : "ash";
@@ -203,7 +196,7 @@ export async function updateUser(req: Request, res: Response) {
         "city": reqData.city,
         "image": imageFileName,
       }
-      const userData = await user.update(data);
+      const userData = await existingUser.update(data);
 
       const apiResponse: ApiResponse<UserAttributes> = {
         ...defaultApiResponse,
@@ -211,7 +204,7 @@ export async function updateUser(req: Request, res: Response) {
         msg: 'User has been updated successfully.',
         data: {
           list: [],
-          path: "",
+          path: UPLOAD_PATH_FOR_USERS,
           detail: { ...userData.dataValues },
         },
       };
@@ -230,17 +223,14 @@ export async function updatePassword(req: Request, res: Response) {
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
-
-    const id = req.params?.id;
+    const existingUser = Object(req)["user"];
+    const user = await User.findOne({
+      where: { uid: existingUser.uid },
+    });
+    
     const { old_password, new_password } = req.body;
-    const user = await User.findOne({ where: { uid: id } });
 
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-
-
-    const passMatch = await bcrypt.compare(old_password, user.password);
+    const passMatch = await bcrypt.compare(old_password, user!.dataValues.password);
     if (!passMatch) {
       return res.status(400).send("Invalid credentials.");
     }
@@ -250,7 +240,7 @@ export async function updatePassword(req: Request, res: Response) {
     const data = {
       password: hashedPassword,
     };
-    await user.update(data);
+    await existingUser.update(data);
 
     const apiResponse: ApiResponse<null> = {
       ...defaultApiResponse,
@@ -258,17 +248,17 @@ export async function updatePassword(req: Request, res: Response) {
       msg: 'Password updated successfully.',
       data: {
         list: [],
-        path: "",
+        path: UPLOAD_PATH_FOR_USERS,
         detail: null,
       },
     };
-
     return res.status(200).json(apiResponse);
   } catch (error) {
     console.log(">>>>", error);
     return res.status(500).send(error);
   }
 }
+
 
 // export async function deleteUser(req: Request, res: Response) {
 //   try {
@@ -327,7 +317,7 @@ export async function getUser(req: Request, res: Response) {
       msg: 'User data fetched.',
       data: {
         list: [],
-        path: "",
+        path: UPLOAD_PATH_FOR_USERS,
         detail: { ...user.dataValues },
       },
     };
@@ -349,7 +339,7 @@ export async function getUsers(req: Request, res: Response) {
       msg: 'User data fetched.',
       data: {
         list: usersData,
-        path: "",
+        path: UPLOAD_PATH_FOR_USERS,
         detail: null,
       },
     };

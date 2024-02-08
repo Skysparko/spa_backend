@@ -26,9 +26,9 @@ router.post("/login", userLoginValidations, userLogin);
 
 router.post("/otp_verify", otpVerify);
 
-router.put("/update/:id", idValidations, registerUserValidation, isAuthorized, updateUser);
+router.put("/update", registerUserValidation, isAuthorized, updateUser);
 
-router.patch("/update-password/:id", idValidations, userPasswordUpdateValidations, isAuthorized, updatePassword);
+router.patch("/update-password", userPasswordUpdateValidations, isAuthorized, updatePassword);
 
 router.get("/:id", idValidations, getUser);
 

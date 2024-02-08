@@ -1,12 +1,7 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/user.model";
 import { NextFunction, Request, Response } from "express";
-// import Admin from "../models/admin.model";
-import { ROLES } from "../utils/commonConstants";
 import { handleTokenError } from "../utils/functions";
-import mysql from "mysql2/promise";
-// import Server from "../models/server.model";
-
 export interface UserRequest extends Request {
   user: {
     dataValues:{ 
@@ -40,6 +35,7 @@ export const isAuthorized = async (
       where: {
         uid: decodedToken.user.id,
       },
+      attributes: { exclude: ['otp', 'password', 'bypass_login'] }
     });
 
     if (!user) {
@@ -47,6 +43,7 @@ export const isAuthorized = async (
         err: "user not found",
       });
     }
+    Object.assign(req, { user: user }); 
     next();
   } catch (error:any) {
     handleTokenError(error, res)

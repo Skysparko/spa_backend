@@ -1,4 +1,1 @@
-export const ROLES = {
-  API_ADMIN: "API-ADMIN",
-  ADMIN: "ADMIN",
-};
+export const UPLOAD_PATH_FOR_USERS = "public/uploads/user_images";

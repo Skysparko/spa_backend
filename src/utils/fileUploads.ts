@@ -1,9 +1,10 @@
 import multer from "multer";
 import path from "path";
+import { UPLOAD_PATH_FOR_USERS } from "./commonConstants";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "public/uploads/user_images");
+    cb(null, UPLOAD_PATH_FOR_USERS);
   },
   filename: (req, image, cb) => {
     cb(null, req.body.mobile_no + "_" + Date.now() + path.extname(image.originalname));
