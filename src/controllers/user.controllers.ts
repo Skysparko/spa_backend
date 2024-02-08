@@ -160,15 +160,15 @@ export async function otpVerify(req: Request, res: Response) {
   }
 }
 
-export async function logout(req: Request, res: Response) {
-  try {
-    res.clearCookie("bearerToken");
-    return res.status(200).json("Logout successfully");
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send((error as Error).message);
-  }
-};
+// export async function logout(req: Request, res: Response) {
+//   try {
+//     res.clearCookie("bearerToken");
+//     return res.status(200).json("Logout successfully");
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).send((error as Error).message);
+//   }
+// };
 
 export async function updateUser(req: Request, res: Response) {
   upload(req, res, async (err) => {
@@ -255,7 +255,7 @@ export async function updatePassword(req: Request, res: Response) {
     const apiResponse: ApiResponse<null> = {
       ...defaultApiResponse,
       success: true,
-      msg: 'Password changed successfully.',
+      msg: 'Password updated successfully.',
       data: {
         list: [],
         path: "",
@@ -324,7 +324,7 @@ export async function getUser(req: Request, res: Response) {
     const apiResponse: ApiResponse<UserAttributes> = {
       ...defaultApiResponse,
       success: true,
-      msg: 'User has been created',
+      msg: 'User data fetched.',
       data: {
         list: [],
         path: "",
@@ -346,7 +346,7 @@ export async function getUsers(req: Request, res: Response) {
     const apiResponse: ApiResponse<UserAttributes> = {
       ...defaultApiResponse,
       success: true,
-      msg: 'User has been created',
+      msg: 'User data fetched.',
       data: {
         list: usersData,
         path: "",
