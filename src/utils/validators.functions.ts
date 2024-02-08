@@ -27,12 +27,8 @@ export const userPasswordUpdateValidations = [
     .notEmpty()
     .withMessage("Password is required")
     .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
-  body("confirm_password")
-    .notEmpty()
-    .withMessage("Password is required")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),]
+    .withMessage("Password must be at least 6 characters long")
+]
 
 export const registerUserValidation = [
   body("name")
