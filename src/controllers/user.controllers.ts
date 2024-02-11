@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import User from "../models/user.model";
-import { getTimeInDays } from "../utils/functions";
+import { getTimeInDays, getUserApiResponse } from "../utils/functions";
 import { upload } from "../utils/fileUploads";
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
@@ -20,7 +20,8 @@ export async function registerUser(req: Request, res: Response) {
       });
 
       if (userExists) {
-        return res.status(403).send("Account already exist with number.");
+        const response = getUserApiResponse(false, "Account already exists with this number.");
+        return res.status(403).json(response);
       }
 
       const hashedPassword = await bcrypt.hash(reqData.password, 10);
@@ -39,27 +40,18 @@ export async function registerUser(req: Request, res: Response) {
 
       const user = await User.create(userData);
 
-      const apiResponse: ApiResponse<UserAttributes> = {
-        ...defaultApiResponse,
-        success: true,
-        msg: 'User has been created',
-        data: {
-          list: [],
-          path: UPLOAD_PATH_FOR_USERS,
-          detail: null,
-        },
-      };
-
-      if (user.bypass_login === "Yes") {
+      let response;
+      if (user.bypass_login === BypassLoginEnum.Yes) {
         const payload = { user: { id: user.uid } };
-        const bearerToken = jwt.sign(payload, process.env.JWT_SECRET as string, {
+        const bearer_token = jwt.sign(payload, process.env.JWT_SECRET as string, {
           expiresIn: 360000,
         });
-        apiResponse.data.detail = user.dataValues;
-        apiResponse.data.bearerToken = bearerToken;
+        response = getUserApiResponse(true, "User has been created", user, bearer_token);
+      } else {
+        response = getUserApiResponse(true, "User has been created");
       }
 
-      return res.status(201).json(apiResponse);
+      return res.status(201).json(response);
     } catch (error) {
       console.log(">>>>", error);
       return res.status(500).send(error);
@@ -79,12 +71,14 @@ export async function userLogin(req: Request, res: Response) {
       where: { mobile_no },
     });
     if (!existingUser) {
-      return res.status(404).send("User not Found");
+      const response = getUserApiResponse(false,"User not Found");
+      return res.status(400).json(response);
     }
 
     const passMatch = await bcrypt.compare(password, existingUser.password);
     if (!passMatch) {
-      return res.status(400).send("Invalid credentials.");
+      const response = getUserApiResponse(false,"Invalid credentials.");
+      return res.status(400).send(response);
     }
 
     const apiResponse: ApiResponse<UserAttributes> = {
@@ -100,11 +94,11 @@ export async function userLogin(req: Request, res: Response) {
 
     if (existingUser.bypass_login === "Yes") {
       const payload = { user: { id: existingUser.uid } };
-      const bearerToken = jwt.sign(payload, process.env.JWT_SECRET as string, {
+      const bearer_token = jwt.sign(payload, process.env.JWT_SECRET as string, {
         expiresIn: 360000,
       });
       apiResponse.data.detail = existingUser.dataValues;
-      apiResponse.data.bearerToken = bearerToken;
+      apiResponse.data.bearer_token = bearer_token;
     }
 
     return res.status(200).json(apiResponse);
@@ -137,7 +131,7 @@ export async function otpVerify(req: Request, res: Response) {
     }
 
     const payload = { user: { id: existingUser.uid } };
-    const bearerToken = jwt.sign(payload, process.env.JWT_SECRET as string, {
+    const bearer_token = jwt.sign(payload, process.env.JWT_SECRET as string, {
       expiresIn: 360000,
     });
 
@@ -149,7 +143,7 @@ export async function otpVerify(req: Request, res: Response) {
         list: [],
         path: UPLOAD_PATH_FOR_USERS,
         detail: { ...existingUser.dataValues },
-        bearerToken
+        bearer_token
       },
     };
 
@@ -160,9 +154,51 @@ export async function otpVerify(req: Request, res: Response) {
   }
 }
 
+export async function updatePassword(req: Request, res: Response) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+    const existingUser = Object(req)["user"];
+    const user = await User.findOne({
+      where: { uid: existingUser.uid },
+    });
+    
+    const { old_password, new_password } = req.body;
+
+    const passMatch = await bcrypt.compare(old_password, user!.dataValues.password);
+    if (!passMatch) {
+      return res.status(400).send("Invalid credentials.");
+    }
+
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    const data = {
+      password: hashedPassword,
+    };
+    await existingUser.update(data);
+
+    const apiResponse: ApiResponse<null> = {
+      ...defaultApiResponse,
+      success: true,
+      msg: 'Password updated successfully.',
+      data: {
+        list: [],
+        path: UPLOAD_PATH_FOR_USERS,
+        detail: null,
+      },
+    };
+    return res.status(200).json(apiResponse);
+  } catch (error) {
+    console.log(">>>>", error);
+    return res.status(500).send(error);
+  }
+}
+
 // export async function logout(req: Request, res: Response) {
 //   try {
-//     res.clearCookie("bearerToken");
+//     res.clearCookie("bearer_token");
 //     return res.status(200).json("Logout successfully");
 //   } catch (error) {
 //     console.log(error);
@@ -217,49 +253,6 @@ export async function updateUser(req: Request, res: Response) {
   })
 }
 
-export async function updatePassword(req: Request, res: Response) {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-    const existingUser = Object(req)["user"];
-    const user = await User.findOne({
-      where: { uid: existingUser.uid },
-    });
-    
-    const { old_password, new_password } = req.body;
-
-    const passMatch = await bcrypt.compare(old_password, user!.dataValues.password);
-    if (!passMatch) {
-      return res.status(400).send("Invalid credentials.");
-    }
-
-    const hashedPassword = await bcrypt.hash(new_password, 10);
-
-    const data = {
-      password: hashedPassword,
-    };
-    await existingUser.update(data);
-
-    const apiResponse: ApiResponse<null> = {
-      ...defaultApiResponse,
-      success: true,
-      msg: 'Password updated successfully.',
-      data: {
-        list: [],
-        path: UPLOAD_PATH_FOR_USERS,
-        detail: null,
-      },
-    };
-    return res.status(200).json(apiResponse);
-  } catch (error) {
-    console.log(">>>>", error);
-    return res.status(500).send(error);
-  }
-}
-
-
 // export async function deleteUser(req: Request, res: Response) {
 //   try {
 //     const user = await User.findOne({
@@ -306,7 +299,7 @@ export async function getUser(req: Request, res: Response) {
     });
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(400).json({
         err: "User not found",
       });
     }

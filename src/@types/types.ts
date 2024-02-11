@@ -1,3 +1,5 @@
+import { UPLOAD_PATH_FOR_USERS } from "../utils/commonConstants";
+
 export enum BypassLoginEnum {
   Yes = 'Yes',
   No = 'No',
@@ -51,7 +53,7 @@ export interface ApiResponse<T> {
     list: T[];
     path: string;
     detail: T | null;
-    bearerToken?: string;
+    bearer_token?: string;
   };
 }
 
@@ -60,7 +62,7 @@ export const defaultApiResponse = {
   msg: "",
   data: {
     list: [],
-    path: '',
+    path: UPLOAD_PATH_FOR_USERS,
     detail: null,
   },
 } as const;

@@ -17,10 +17,12 @@ app.use(cors({
 }));
 
 //routes
-app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/auth", userRoutes);
+app.use("/api/v1/user", userRoutes);
 
 
 app.listen(process.env.PORT, () => {
   console.log("app live on ", process.env.BASE_URL);
   connectDB();
 });
+
