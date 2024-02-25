@@ -81,27 +81,18 @@ export async function userLogin(req: Request, res: Response) {
       return res.status(400).send(response);
     }
 
-    const apiResponse: ApiResponse<UserAttributes> = {
-      ...defaultApiResponse,
-      success: true,
-      msg: 'Logged in successfully.',
-      data: {
-        list: [],
-        path: UPLOAD_PATH_FOR_USERS,
-        detail: null,
-      },
-    };
-
-    if (existingUser.bypass_login === "Yes") {
+    let response;
+    if (existingUser.bypass_login === BypassLoginEnum.Yes) {
       const payload = { user: { id: existingUser.uid } };
       const bearer_token = jwt.sign(payload, process.env.JWT_SECRET as string, {
         expiresIn: 360000,
       });
-      apiResponse.data.detail = existingUser.dataValues;
-      apiResponse.data.bearer_token = bearer_token;
+      response = getUserApiResponse(true, "Logged in successfully.", existingUser, bearer_token);
+    } else {
+      response = getUserApiResponse(true, "Logged in successfully.");
     }
 
-    return res.status(200).json(apiResponse);
+    return res.status(201).json(response);
   } catch (error) {
     console.log(">>>>", error);
     return res.status(500).send(error);
@@ -123,11 +114,13 @@ export async function otpVerify(req: Request, res: Response) {
     });
 
     if (!existingUser) {
-      return res.status(404).send("User not Found");
+      const response = getUserApiResponse(false,"User not Found");
+      return res.status(404).send(response);
     }
 
-    if (otp === existingUser.otp) {
-      return res.status(400).send("Invalid otp.");
+    if (otp !== existingUser.otp) {
+        const response = getUserApiResponse(false,"Invalid otp.");
+        return res.status(400).send(response);
     }
 
     const payload = { user: { id: existingUser.uid } };
@@ -135,19 +128,9 @@ export async function otpVerify(req: Request, res: Response) {
       expiresIn: 360000,
     });
 
-    const apiResponse: ApiResponse<UserAttributes> = {
-      ...defaultApiResponse,
-      success: true,
-      msg: 'Logged in successfully.',
-      data: {
-        list: [],
-        path: UPLOAD_PATH_FOR_USERS,
-        detail: { ...existingUser.dataValues },
-        bearer_token
-      },
-    };
+    const response = getUserApiResponse(true, "Logged in successfully", existingUser, bearer_token);
 
-    return res.status(200).json(apiResponse);
+    return res.status(200).json(response);
   } catch (error) {
     console.log(">>>>", error);
     return res.status(500).send(error);
@@ -169,7 +152,8 @@ export async function updatePassword(req: Request, res: Response) {
 
     const passMatch = await bcrypt.compare(old_password, user!.dataValues.password);
     if (!passMatch) {
-      return res.status(400).send("Invalid credentials.");
+        const response = getUserApiResponse(false,"Invalid credentials.");
+        return res.status(400).send(response);
     }
 
     const hashedPassword = await bcrypt.hash(new_password, 10);
@@ -178,18 +162,9 @@ export async function updatePassword(req: Request, res: Response) {
       password: hashedPassword,
     };
     await existingUser.update(data);
+    const response = getUserApiResponse(true,"Password updated successfully.");
 
-    const apiResponse: ApiResponse<null> = {
-      ...defaultApiResponse,
-      success: true,
-      msg: 'Password updated successfully.',
-      data: {
-        list: [],
-        path: UPLOAD_PATH_FOR_USERS,
-        detail: null,
-      },
-    };
-    return res.status(200).json(apiResponse);
+    return res.status(200).json(response);
   } catch (error) {
     console.log(">>>>", error);
     return res.status(500).send(error);
@@ -221,7 +196,8 @@ export async function updateUser(req: Request, res: Response) {
         },
       });
       if (user) {
-        return res.status(403).send("Account already exist with number.");
+        const response = getUserApiResponse(false,"Account already exist with number.");
+        return res.status(403).send(response);
       }
 
       const imageFileName = req.file ? req.file.filename : "ash";
@@ -234,18 +210,8 @@ export async function updateUser(req: Request, res: Response) {
       }
       const userData = await existingUser.update(data);
 
-      const apiResponse: ApiResponse<UserAttributes> = {
-        ...defaultApiResponse,
-        success: true,
-        msg: 'User has been updated successfully.',
-        data: {
-          list: [],
-          path: UPLOAD_PATH_FOR_USERS,
-          detail: { ...userData.dataValues },
-        },
-      };
-
-      return res.status(200).json(apiResponse);
+      const response = getUserApiResponse(true,"User has been updated successfully.",userData.dataValues);
+      return res.status(200).json(response);
     } catch (error) {
       console.log(">>>>", error);
       return res.status(500).json(error);
