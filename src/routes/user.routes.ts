@@ -24,7 +24,7 @@ router.post("/register", registerUserValidation, registerUser);
 
 router.post("/login", userLoginValidations, userLogin);
 
-router.post("/otp_verify", otpVerify);
+router.post("/otp-verify", otpVerify);
 
 router.put("/update", registerUserValidation, isAuthorized, updateUser);
 

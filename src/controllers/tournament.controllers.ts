@@ -23,9 +23,9 @@ export async function createTournament(req: Request, res: Response) {
         title: reqData.title,
         logo: imageFileName,
         season: reqData.season,
-        from_date: reqData.from_date,
-        to_date: reqData.to_date,
-        end_date: reqData.end_date,
+        from_date: new Date(reqData.from_date),
+        to_date: new Date(reqData.to_date),
+        end_date: new Date(reqData.end_date),
         type: reqData.type,
         win_point: reqData.win_point,
       };
@@ -49,7 +49,8 @@ export async function updateTournament(req: Request, res: Response) {
       const tournament = await Tournament.findOne({ where: { tnid: req.params.id } });
 
       if (!tournament) {
-        return res.status(404).send("Tournament not found");
+        const response = getUserApiResponse(false, "Tournament not found");
+        return res.status(400).send(response);
       }
       const imageFileName = req.file ? req.file.filename : "ash";
 
@@ -59,9 +60,9 @@ export async function updateTournament(req: Request, res: Response) {
         title: reqData.title,
         logo: imageFileName,
         season: reqData.season,
-        from_date: reqData.from_date,
-        to_date: reqData.to_date,
-        end_date: reqData.end_date,
+        from_date: new Date(reqData.from_date),
+        to_date: new Date(reqData.to_date),
+        end_date: new Date(reqData.end_date),
         type: reqData.type,
         win_point: reqData.win_point,
       };
@@ -83,13 +84,12 @@ export async function deleteTournament(req: Request, res: Response) {
     });
 
     if (!tournament) {
-      return res.status(404).json({
-        err: "Tournament not found",
-      });
+      const response = getUserApiResponse(false, "Tournament not found");
+      return res.status(400).send(response);
     }
     await tournament.destroy();
 
-    const response = getUserApiResponse(true, "Tournament deleted.", tournament);
+    const response = getUserApiResponse(true, "Tournament deleted.");
     return res.status(200).json(response);
   } catch (error) {
     console.log(">>>>", error);
@@ -105,9 +105,8 @@ export async function getTournament(req: Request, res: Response) {
     });
 
     if (!tournament) {
-      return res.status(400).json({
-        err: "Tournament not found",
-      });
+      const response = getUserApiResponse(false, "Tournament not found");
+      return res.status(400).json(response);
     }
     const response = getUserApiResponse(true, "Tournament data fetched.", tournament);
 

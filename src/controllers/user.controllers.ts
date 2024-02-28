@@ -110,7 +110,7 @@ export async function otpVerify(req: Request, res: Response) {
 
     const existingUser = await User.findOne({
       where: { mobile_no },
-      attributes: { exclude: ['otp', 'password', 'bypass_login'] }
+      attributes: { exclude: ['password', 'bypass_login'] }
     });
 
     if (!existingUser) {

@@ -20,7 +20,7 @@ app.use(cors({
 //routes
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/user", userRoutes);
-app.use("/api/v1/tournament", tournamentRoutes);
+app.use("/api/v1/tournaments", tournamentRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log("app live on ", process.env.BASE_URL);
