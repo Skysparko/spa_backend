@@ -66,6 +66,23 @@ export const defaultApiResponse = {
     detail: null,
   },
 } as const;
+
+export interface TeamAttributes {
+tmid?: number;
+tnid: number;
+name: string;
+logo: string;
+s_name: string;
+group: string;
+tmatch : string;
+pmatch: string;
+win: number;
+lose: number;
+tie: number;
+rating :number;
+point:number;
+color:string;
+}
 // uid, name, image,mobile_no, password, email, city, reg_date,status
 // interface ServerAttributes {
 //   id?: number;
