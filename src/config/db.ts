@@ -1,9 +1,10 @@
 import { Sequelize } from "sequelize";
-
+import dotenv from "dotenv";
+dotenv.config();
 const createDB = new Sequelize(
-  'scorenet',
-  'root',
-  '123456',
+  process.env.DB_NAME as string,
+  process.env.DB_USERNAME as string,
+  process.env.DB_PASSWORD as string,
    {
      host: 'localhost',
      dialect: 'mysql'
