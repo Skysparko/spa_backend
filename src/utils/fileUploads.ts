@@ -15,6 +15,7 @@ export const upload = multer({
   storage,
   limits: { fileSize: 100000 * 100 },
   fileFilter: (req, image, cb) => {
+    console.log("uploading",image)
     const fileTypes = /jpg|png|jpeg|bmp/;
     const extname = fileTypes.test(path.extname(image.originalname));
     const mimetype = fileTypes.test(image.mimetype); 

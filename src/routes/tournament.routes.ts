@@ -10,7 +10,7 @@ const router: Router = express.Router();
 
 router.post("/create", isAuthorized, createTournament);
 
-router.put("/update/:id", idValidations, isAuthorized, updateTournament);
+router.put("/:id", idValidations, isAuthorized, updateTournament);
 
 router.get("/:id", idValidations, isAuthorized, getTournament);
 

@@ -121,7 +121,7 @@ export async function getTournaments(req: Request, res: Response) {
   try {
     const tournamentsData = await Tournament.findAll();
     const response = getUserApiResponse(true, "Tournament data fetched.", tournamentsData);
-
+    console.log("data fetched", response);
     return res.status(200).json(response);
   } catch (error) {
     console.log(">>>>", error);

@@ -3,6 +3,7 @@ import { Response } from "express";
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import dotenv from "dotenv";
 import { ApiResponse, UserAttributes, defaultApiResponse } from "../@types/types";
+import { UPLOAD_PATH_FOR_USERS } from "./commonConstants";
 dotenv.config();
 // function for getting days time in seconds
 export const getTimeInDays = (days: number) => {
@@ -35,9 +36,10 @@ export function getUserApiResponse<T>(
   data: T[] | T | null = null,
   bearer_token: string = ""
 ): ApiResponse<UserAttributes> {
-  let responseData: { list: UserAttributes[], path: string, detail: UserAttributes | null } = { list: [], path: "", detail: null };
+  let responseData: { list: UserAttributes[], path: string, detail: UserAttributes | null } = { list: [], path: UPLOAD_PATH_FOR_USERS, detail: null };
 
   if (Array.isArray(data)) {
+    console.log(data);
     responseData.list = data as UserAttributes[];
   } else if (typeof data === 'object' && data !== null) {
     responseData.detail = data as unknown as UserAttributes;

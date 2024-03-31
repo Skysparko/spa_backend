@@ -34,6 +34,4 @@ router.get("/:id", idValidations, getUser);
 
 router.get("/", getUsers);
 
-// router.delete("/:id",idValidations,  deleteUser);
-
 export default router;

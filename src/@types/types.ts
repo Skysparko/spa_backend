@@ -46,6 +46,17 @@ export interface TournamentAttributes {
   win_point: number;
 }
 
+export interface PlayerAttributes {
+  pid?:number
+  tnid: string,
+  name: string,
+  image: string,
+  sname: string,
+  mobile: string,
+  status: StatusEnum,
+}
+
+
 export interface ApiResponse<T> {
   success: boolean;
   msg: string;

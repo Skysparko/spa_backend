@@ -13,7 +13,7 @@ export async function createTeam(req: Request, res: Response) {
       const imageFileName = req.file ? req.file.filename : "ash";
 
       const teamData: TeamAttributes = {
-        tnid:reqData.tmid,
+        tnid:reqData.tnid,
         name:reqData.name,
         logo:imageFileName,
         s_name:reqData.s_name,
@@ -53,7 +53,7 @@ export async function updateTeam(req: Request, res: Response) {
       const imageFileName = req.file ? req.file.filename : "ash";
 
       const teamData: TeamAttributes = {
-        tnid:reqData.tmid,
+        tnid:reqData.tnid,
         name:reqData.name,
         logo:imageFileName,
         s_name:reqData.s_name,

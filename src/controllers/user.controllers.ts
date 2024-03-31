@@ -13,6 +13,7 @@ export async function registerUser(req: Request, res: Response) {
   upload(req, res, async (err) => {
     try {
       const reqData = req.body;
+      // console.log("uploading",reqData,req.file)
       const userExists = await User.findOne({
         where: {
           mobile_no: reqData.mobile_no,
@@ -21,6 +22,7 @@ export async function registerUser(req: Request, res: Response) {
 
       if (userExists) {
         const response = getUserApiResponse(false, "Account already exists with this number.");
+        console.log(response)
         return res.status(403).json(response);
       }
 
@@ -195,6 +197,7 @@ export async function updateUser(req: Request, res: Response) {
           }
         },
       });
+      console.log(user)
       if (user) {
         const response = getUserApiResponse(false,"Account already exist with number.");
         return res.status(403).send(response);

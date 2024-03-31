@@ -16,10 +16,12 @@ export const isAuthorized = async (
   next: NextFunction
 ) => {
   try {
+    console.log("token");
     const authHeader = req.headers.authorization as string;
+    console.log("yo",req.headers.authorization);
 
-    const token = authHeader.split(" ")[1];
-
+    const token = authHeader?.split(" ")[1];
+    console.log("yo1",token);
     if (!token) {
       return res.status(404).json({
         err: "token not found",
